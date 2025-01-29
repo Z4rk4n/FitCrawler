@@ -17,6 +17,7 @@ $crawler->filter('div.letter-section ul.az-columns li a')->each(function ($node)
     $exercices[] = [
         "name" => $node->text(),
         "link" => $node->attr("href"),
+        "category" => "",
         "description" => "",
         "steps" => [],
         "advices" => [],
@@ -30,13 +31,19 @@ foreach ($exercices as $key => $exercice) {
 
     // load page
     $crawler = $client->request('GET', $exercice["link"]);
+
+    // category
+    $crawler->filter("header.page-header div.meta-category ul.post-categories li")->each(function ($node) use (&$exercices, $key) {
+        $category = (!empty(trim($node->text())) && trim($node->text()) != "Exercices") ? trim($node->text()) : "Other";
+        if (empty($exercices[$key]["category"])) $exercices[$key]["category"] = $category;
+    });
     
     // gif
     $crawler->filter("div.post-main section.entry-content div.wp-block-image figure img")->each(function ($node) use (&$exercices, $key) {
         // downloadGif($node->attr("src"))
         $gifLink = $node->attr('src');
         if (preg_match("/(?<=\/)([a-zA-Z0-9-]+)\.gif$/", $gifLink, $matches)) {
-            downloadGif($gifLink, "assets/" . $matches[0]);
+            // downloadGif($gifLink, "assets/" . $matches[0]);
             $exercices[$key]["gif-links"]["link"] = $gifLink;
             $exercices[$key]["gif-links"]["name"] = $matches[0];
         }
